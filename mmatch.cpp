@@ -7,34 +7,36 @@ using namespace std;
 class Edge
 {
     int capacity;
-    int currentFlow;
     bool reverse;
     int vertex1, vertex2;
     Edge *redge;
          
 public:
-    Edge(int capacity, int currentFlow, int vertex1, int vertex2);
+    Edge(int capacity, int vertex1, int vertex2);
     void setCapacity(int capacity);
-    void setCurrentFlow(int currentFlow);
     void setVertex1(int vertex1);
     void setVertex2(int vertex2);
     void setRedge(Edge *redge);
     void setReverse(bool reverse);
     int getCapacity();
-    int getCurrentFlow();
     int getVertex1();
     int getVertex2();
     Edge* getRedge();
     bool isReverse();
+    bool operator==(Edge edge2);
 };
 
-Edge::Edge(int capacity, int currentFlow, int vertex1, int vertex2)
+Edge::Edge(int capacity, int vertex1, int vertex2)
 {
     this->capacity = capacity;
-    this->currentFlow = currentFlow;
     this->vertex1 = vertex1;
     this->vertex2 = vertex2;
     redge = NULL;
+}
+
+bool Edge::operator==(Edge edge2)
+{
+    return getVertex1() == edge2.getVertex1() && getVertex2() == edge2.getVertex2();
 }
 
 void Edge::setRedge(Edge *redge)
@@ -45,11 +47,6 @@ void Edge::setRedge(Edge *redge)
 void Edge::setCapacity(int capacity)
 {
     this->capacity = capacity;
-}
-
-void Edge::setCurrentFlow(int currentFlow)
-{
-    this->currentFlow = currentFlow;
 }
 
 void Edge::setReverse(bool reverse)
@@ -77,11 +74,6 @@ int Edge::getCapacity()
     return capacity;
 }
 
-int Edge::getCurrentFlow() 
-{
-    return currentFlow;
-}
-
 int Edge::getVertex1()
 {
     return vertex1;
@@ -101,15 +93,17 @@ class NetworkFlow
 {
     //Adjacent lists
     // Each list contains the edges that go out from the vertex index.
-    vector< vector<Edge*> > adj;
+    vector< vector<Edge> > adj;
+    // Matrix of flow
+    int **flow;
     int sourceVertex, sinkVertex;
     int dimension;
     
 public:
     NetworkFlow(int dimension);
     void addEdge(int vertex1, int vertex2, int capacity);
-    vector<Edge*> getEdges(int vertex);
-    vector<Edge*> findPath(int sourceVertex, int sinkVertex, vector<Edge*> path);
+    vector<Edge> getEdges(int vertex);
+    vector<Edge> findPath(int sourceVertex, int sinkVertex, vector<Edge> path);
     int findMaxFlow();
     int getSourceVertex();
     int getSinkVertex();
@@ -121,18 +115,28 @@ public:
 
 NetworkFlow::NetworkFlow(int dimension) : adj(dimension)
 {
+    flow = new int*[dimension];
+    for(int index=0; index < dimension; index++)
+    {
+        flow[index] = new int[dimension];
+        for(int inner_index=0; inner_index < dimension; inner_index++)
+        {
+            flow[index][inner_index] = 0;
+        }
+    }
+
     this->dimension = dimension;
 }
 
 NetworkFlow::~NetworkFlow()
 {
-    for(vector< vector<Edge*> >::iterator outter_it = adj.begin(); outter_it != adj.end(); outter_it++)
+    for(int index=0; index < dimension; index++)
     {
-        for(vector<Edge*>::iterator inner_it = outter_it->begin(); inner_it != outter_it->end(); inner_it++)
-            delete *inner_it;
-    
-        outter_it->erase(outter_it->begin());
+        delete[] flow[index];
+	adj[index].erase(adj[index].begin());
     }
+
+    delete[] flow;
     adj.erase(adj.begin());
 }
 
@@ -158,36 +162,36 @@ void NetworkFlow::setSinkVertex(int sinkVertex)
 
 void NetworkFlow::addEdge(int vertex1, int vertex2, int capacity)
 {
-    Edge *edge = new Edge(capacity, 0, vertex1, vertex2);
-    Edge *redge = new Edge(0, 0, vertex2, vertex1);
+    Edge *edge = new Edge(capacity, vertex1, vertex2);
+    Edge *redge = new Edge(0, vertex2, vertex1);
     edge->setRedge(redge);
     edge->setReverse(false);
     redge->setRedge(edge);
     redge->setReverse(true);
-    adj[vertex1].push_back(edge);
-    adj[vertex2].push_back(redge);
+    adj[vertex1].push_back(*edge);
+    adj[vertex2].push_back(*redge);
 
 }
 
-vector<Edge*> NetworkFlow::getEdges(int vertex)
+vector<Edge> NetworkFlow::getEdges(int vertex)
 {
     return adj[vertex];
 }
 
-vector<Edge*> NetworkFlow::findPath(int sourceVertex, int sinkVertex, vector<Edge*> path)
+vector<Edge> NetworkFlow::findPath(int sourceVertex, int sinkVertex, vector<Edge> path)
 {
     if(sourceVertex == sinkVertex)
     {
         return path;
     }
     
-    for(vector<Edge*>::iterator edge = adj[sourceVertex].begin(); edge != adj[sourceVertex].end(); edge++)
+    for(vector<Edge>::iterator edge = adj[sourceVertex].begin(); edge != adj[sourceVertex].end(); edge++)
     {
-        int residual = (*edge)->getCapacity() - (*edge)->getCurrentFlow();
+        int residual = edge->getCapacity() - flow[edge->getVertex1()][edge->getVertex2()];
         if(residual > 0 && find(path.begin(), path.end(), *edge) == path.end())
         {
             path.push_back(*edge);
-            vector<Edge*> result = findPath((*edge)->getVertex2(), sinkVertex, path);
+            vector<Edge> result = findPath(edge->getVertex2(), sinkVertex, path);
             if(!result.empty())
             {
                 return result;
@@ -201,33 +205,33 @@ vector<Edge*> NetworkFlow::findPath(int sourceVertex, int sinkVertex, vector<Edg
 
 int NetworkFlow::findMaxFlow()
 {
-    vector<Edge*> path;
+    vector<Edge> path;
     path = findPath(sourceVertex, sinkVertex, path);
     while(!path.empty())
     {
 
         vector<int> residuals;
-        for(vector<Edge*>::iterator edge = path.begin(); edge != path.end(); edge++)
+        for(vector<Edge>::iterator edge = path.begin(); edge != path.end(); edge++)
         {
-            residuals.push_back((*edge)->getCapacity() - (*edge)->getCurrentFlow());
+            residuals.push_back(edge->getCapacity() - flow[edge->getVertex1()][edge->getVertex2()]);
         }
         
         int flowValue = *min_element(residuals.begin(), residuals.end());
-        for(vector<Edge*>::iterator edge = path.begin(); edge != path.end(); edge++)
+        for(vector<Edge>::iterator edge = path.begin(); edge != path.end(); edge++)
         {
-            (*edge)->setCurrentFlow((*edge)->getCurrentFlow() + flowValue);
-            (*edge)->getRedge()->setCurrentFlow((*edge)->getRedge()->getCurrentFlow() - flowValue);
+            flow[edge->getVertex1()][edge->getVertex2()] += flowValue;
+            flow[edge->getVertex2()][edge->getVertex1()] -= flowValue;
         }
         path.clear();
         path = findPath(sourceVertex, sinkVertex, path);
     }
     
     int sum = 0;
-    for(vector<Edge*>::iterator edge = getEdges(sourceVertex).begin(); edge != getEdges(sourceVertex).end(); edge++)
+    for(vector<Edge>::iterator edge = getEdges(sourceVertex).begin(); edge != getEdges(sourceVertex).end(); edge++)
     {
-        if(!(*edge)->isReverse())
+        if(!edge->isReverse())
         {
-            sum += (*edge)->getCurrentFlow();
+            sum += flow[edge->getVertex1()][edge->getVertex2()];
         }
     }
     
