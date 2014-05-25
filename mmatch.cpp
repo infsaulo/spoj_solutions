@@ -1,4 +1,4 @@
-#include <iostream>
+#include <cstdio>
 #include <vector>
 #include <algorithm>
 
@@ -220,11 +220,6 @@ vector<Edge*> NetworkFlow::findPath(int sourceVertex, int sinkVertex)
         
     }while(!track.empty());
     
-    if(!path.empty() && path.back()->getVertex2() == sinkVertex)
-    {
-        return path;
-    }
-    
     return path;
 }
 
@@ -268,10 +263,10 @@ NetworkFlow* loadTestCase()
     NetworkFlow *assignments;
     
     int numberChildren, numberBeds;
-    cin >> numberChildren >> numberBeds;
+    scanf("%d %d", &numberChildren, &numberBeds);
     assignments = new NetworkFlow(numberChildren + numberBeds + 2);
     int child, bed;
-    cin >> child >> bed;
+    scanf("%d %d", &child, &bed);
     while(child != 0 && bed != 0)
     {
         /*
@@ -280,7 +275,7 @@ NetworkFlow* loadTestCase()
          */
         
         assignments->addEdge(child - 1, numberChildren + bed - 1 , 1);
-        cin >> child >> bed;
+        scanf("%d %d", &child, &bed);
     }
     
     /*
@@ -307,14 +302,13 @@ NetworkFlow* loadTestCase()
 
 int main()
 {
-    cin.sync_with_stdio(false);
     int amountTestCases;
-    cin >> amountTestCases;
+    scanf("%d", &amountTestCases);
     
     for(int indexTestCase=0; indexTestCase < amountTestCases; indexTestCase++)
     {
         NetworkFlow *assignmentsChildrenBeds = loadTestCase();
-        cout << assignmentsChildrenBeds->findMaxFlow() << endl;
+        printf("%d\n", assignmentsChildrenBeds->findMaxFlow());
         delete assignmentsChildrenBeds;
     }
     
