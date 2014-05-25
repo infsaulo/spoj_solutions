@@ -220,11 +220,6 @@ vector<Edge*> NetworkFlow::findPath(int sourceVertex, int sinkVertex)
         
     }while(!track.empty());
     
-    if(!path.empty() && path.back()->getVertex2() == sinkVertex)
-    {
-        return path;
-    }
-    
     return path;
 }
 
