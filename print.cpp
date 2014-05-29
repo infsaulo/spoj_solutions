@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -12,7 +13,8 @@ vector<int> returnPrimes(int limitNumber)
     for(int primeCandidate = 3; primeCandidate <= limitNumber; primeCandidate+=2)
     {
        bool isPrime = true;
-       for(vector<int>::iterator primeFactor = primeList.begin(); primeFactor != primeList.end(); primeFactor++)
+       int primeCandidateSqrt = (int)sqrt((float)primeCandidate);
+       for(vector<int>::iterator primeFactor = primeList.begin(); primeFactor != primeList.end() || *primeFactor > primeCandidateSqrt; primeFactor++)
        {
            if(primeCandidate % (*primeFactor) == 0)
            {
@@ -20,11 +22,13 @@ vector<int> returnPrimes(int limitNumber)
                break;
            }
        }
+
        if(isPrime)
        {
            primeList.push_back(primeCandidate);
        }
     }
+
     return primeList;
 }
 
