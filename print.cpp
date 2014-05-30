@@ -1,22 +1,23 @@
 #include <cstdio>
-#include <vector>
+#include <deque>
 #include <cmath>
 
 using namespace std;
 
 
-vector<int> returnPrimes(int limitNumber)
+deque<int> returnPrimes(int limitNumber)
 {
-    vector<int> primeList;
-    primeList.push_back(2);
-    
-    for(int primeCandidate = 3; primeCandidate <= limitNumber; primeCandidate+=2)
+    deque<int> exceptedPrimeList(1, 2);
+    deque<int> testPrimeList(1, 3);
+    deque<int> skipSet(1, 2);
+     
+    for(int primeCandidate = 3; primeCandidate <= limitNumber; primeCandidate+=skipSet[0])
     {
        bool isPrime = true;
        int primeCandidateSqrt = (int)sqrt((float)primeCandidate);
-       for(vector<int>::iterator primeFactor = primeList.begin(); primeFactor != primeList.end() || *primeFactor > primeCandidateSqrt; primeFactor++)
+       for(int index=0; index < testPrimeList.size() && testPrimeList[index] <= primeCandidateSqrt; index++)
        {
-           if(primeCandidate % (*primeFactor) == 0)
+           if(primeCandidate % testPrimeList[index] == 0)
            {
                isPrime = false;
                break;
@@ -25,11 +26,17 @@ vector<int> returnPrimes(int limitNumber)
 
        if(isPrime)
        {
-           primeList.push_back(primeCandidate);
+           testPrimeList.push_back(primeCandidate);
        }
     }
 
-    return primeList;
+    while(!exceptedPrimeList.empty())
+    {
+        testPrimeList.push_front(exceptedPrimeList.back());
+        exceptedPrimeList.pop_back();
+    }
+
+    return testPrimeList;
 }
 
 int main()
@@ -41,8 +48,8 @@ int main()
     for(int index=0; index < amountIntervals; index++)
     {
         scanf("%d %d", &bottomLimit, &upperLimit);
-        vector<int> primeList = returnPrimes(upperLimit);
-        for(vector<int>::iterator prime = primeList.begin(); prime != primeList.end(); prime++)
+        deque<int> primeList = returnPrimes(upperLimit);
+        for(deque<int>::iterator prime = primeList.begin(); prime != primeList.end(); prime++)
         {
             if(*prime >= bottomLimit)
             {
