@@ -2,6 +2,8 @@
 #include <deque>
 #include <cmath>
 
+#define MAX_NUMBER 2147483647
+
 using namespace std;
 
 
@@ -156,18 +158,45 @@ int main()
     int amountIntervals;
     int bottomLimit, upperLimit;
     scanf("%d", &amountIntervals);
-    
+ 
+    deque<int> primeList = returnPrimes((int)sqrt((double)MAX_NUMBER));
+
     for(int index=0; index < amountIntervals; index++)
     {
         scanf("%d %d", &bottomLimit, &upperLimit);
-        deque<int> primeList = returnPrimes(upperLimit);
-        for(deque<int>::iterator prime = primeList.begin(); prime != primeList.end(); prime++)
+        if(bottomLimit == 2)
         {
-            if(*prime >= bottomLimit)
+            printf("%d\n", bottomLimit);
+        }
+
+        int increment;
+        if(bottomLimit % 2 == 0)
+        {
+            increment = 1;
+        }
+        else
+        {
+            increment = 0;
+        }
+        for(int number=bottomLimit+increment; number <= upperLimit; number+=2)
+        {
+            int sqrtNumber = (int)sqrt((double)number);
+            bool isPrime = true;
+            for(deque<int>::iterator it = primeList.begin(); *it <= sqrtNumber; it++)
             {
-                printf("%d\n", *prime);
+                if(number % *it == 0)
+                {
+                    isPrime = false;
+                    break;
+                }
+            }
+            
+            if(isPrime)
+            {
+                printf("%d\n", number);
             }
         }
     }
+    
     return 0;
 }
