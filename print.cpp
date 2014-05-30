@@ -44,7 +44,7 @@ deque<int> returnPrimes(int limitNumber)
                 
                 int sqrtNextPrimeCandidate = (int)sqrt((float)nextPrimeCandidate);
                 bool isPrime = true;
-                for(int index=0; index < (int)testPrimeList.size() && sqrtNextPrimeCandidate < testPrimeList[index]; index++)
+                for(int index=0; index < (int)testPrimeList.size() && sqrtNextPrimeCandidate <= testPrimeList[index]; index++)
                 {
                     if(nextPrimeCandidate % testPrimeList[index] == 0)
                     {
@@ -85,7 +85,7 @@ deque<int> returnPrimes(int limitNumber)
                     
                     int sqrtNextPrimeCandidate = (int)sqrt((float)nextPrimeCandidate);
                     bool isPrime = true;
-                    for(int index=0; index < (int)testPrimeList.size() && sqrtNextPrimeCandidate < testPrimeList[index]; index++)
+                    for(int index=0; index < (int)testPrimeList.size() && sqrtNextPrimeCandidate <= testPrimeList[index]; index++)
                     {
                         if(nextPrimeCandidate % testPrimeList[index] == 0)
                         {
