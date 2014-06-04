@@ -6,194 +6,65 @@
 
 using namespace std;
 
-
-deque<int> returnPrimes(int limitNumber)
+deque<long> returnPrimesEratosthenes(long limitNumber)
 {
-    int sqrtLimit = (int)sqrt((float)limitNumber);
-    int primeCandidate = 2;
-    deque<int> skipSet(1, primeCandidate);
-    deque<int> exceptedPrimeList(1, primeCandidate);
-    primeCandidate++;
-    deque<int> rangeSkipSet(1, skipSet[0]);
-    deque<int> testPrimeList(1, primeCandidate);
+    deque<bool>sieve(limitNumber, true);
 
-    int indexCurrentSkipSetRange = 0;
-    rangeSkipSet.push_back(rangeSkipSet[indexCurrentSkipSetRange] * testPrimeList[0]);
-    
-    deque<int> extendedPrimeList;
-    primeCandidate+=skipSet[0];
-    int nextPrimeCandidate = primeCandidate;
-    testPrimeList.push_back(nextPrimeCandidate);
-     
-    while(nextPrimeCandidate < limitNumber)
+    long sqrtLimitNumber = (long)sqrt((double)limitNumber);
+
+    for(long i = 2; i <= sqrtLimitNumber; i++)
     {
-        indexCurrentSkipSetRange++;
-        while(nextPrimeCandidate < rangeSkipSet[indexCurrentSkipSetRange] + 1)
+        if(sieve[i-1])
         {
-            for(deque<int>::iterator n = skipSet.begin(); n != skipSet.end(); n++)
+            for(long p = i*i; p <= limitNumber; p+=i)
             {
-                nextPrimeCandidate = primeCandidate + *n;
-                
-                if(nextPrimeCandidate > limitNumber)
-                {
-                    break;
-                }
-                
-                if(nextPrimeCandidate <= rangeSkipSet[indexCurrentSkipSetRange] + 1)
-                {
-                    primeCandidate = nextPrimeCandidate;
-                }
-                
-                int sqrtNextPrimeCandidate = (int)sqrt((float)nextPrimeCandidate);
-                bool isPrime = true;
-                for(int index=0; index < (int)testPrimeList.size() && sqrtNextPrimeCandidate <= testPrimeList[index]; index++)
-                {
-                    if(nextPrimeCandidate % testPrimeList[index] == 0)
-                    {
-                        isPrime = false;
-                        break;
-                    }
-                }
-               
-                if(isPrime)
-                {
-                    if(nextPrimeCandidate <= sqrtLimit)
-                    {
-                        testPrimeList.push_back(nextPrimeCandidate);
-                    }
-                    else
-                    {
-                        extendedPrimeList.push_back(nextPrimeCandidate);
-                    }
-                }
+                sieve[p-1] = false;
             }
-            
-            if(nextPrimeCandidate > limitNumber)
-            {
-                break;
-            }
-
-            int lastRelevantPrimeCandidate = primeCandidate;
-            deque<int> nextSkipSet;
-            while(primeCandidate < (rangeSkipSet[indexCurrentSkipSetRange]+1)*2 - 1)
-            {
-                for(deque<int>::iterator n=skipSet.begin(); n != skipSet.end(); n++)
-                {
-                    nextPrimeCandidate = primeCandidate + *n;
-                    if(nextPrimeCandidate > limitNumber)
-                    {
-                        break;
-                    }
-                    
-                    int sqrtNextPrimeCandidate = (int)sqrt((float)nextPrimeCandidate);
-                    bool isPrime = true;
-                    for(int index=0; index < (int)testPrimeList.size() && sqrtNextPrimeCandidate <= testPrimeList[index]; index++)
-                    {
-                        if(nextPrimeCandidate % testPrimeList[index] == 0)
-                        {
-                            isPrime = false;
-                            break;
-                        }
-                    }
-                   
-                    if(isPrime)
-                    {
-                        if(nextPrimeCandidate <= sqrtLimit)
-                        {
-                            testPrimeList.push_back(nextPrimeCandidate);
-                        }
-                        else
-                        {
-                            extendedPrimeList.push_back(nextPrimeCandidate);
-                        }
-                    }
- 
-                    if(nextPrimeCandidate % testPrimeList[0] != 0)
-                    {
-                        nextSkipSet.push_back(nextPrimeCandidate - lastRelevantPrimeCandidate);
-                        lastRelevantPrimeCandidate = nextPrimeCandidate;
-                    }
-                    
-                    primeCandidate = nextPrimeCandidate;
-                    
-                }
-
-                if(nextPrimeCandidate > limitNumber)
-                {
-                    break;
-                }
-            }
-
-            if(nextPrimeCandidate > limitNumber)
-            {
-                break;
-            }
-
-            skipSet = nextSkipSet;
-            exceptedPrimeList.push_back(testPrimeList[0]);
-            testPrimeList.pop_front();
-            rangeSkipSet.push_back(rangeSkipSet[indexCurrentSkipSetRange] * testPrimeList[0]);
-            nextPrimeCandidate = lastRelevantPrimeCandidate;
         }
-
-    }   
- 
-    while(!exceptedPrimeList.empty())
-    {
-        testPrimeList.push_front(exceptedPrimeList.back());
-        exceptedPrimeList.pop_back();
     }
 
-    while(!testPrimeList.empty())
+    deque<long> primeNumberList;
+    for(long index = 1; index < limitNumber; index++)
     {
-        extendedPrimeList.push_front(testPrimeList.back());
-        testPrimeList.pop_back();
+        if(sieve[index])
+        {
+            primeNumberList.push_back(index+1);
+        }
     }
 
-    return extendedPrimeList;
+   return primeNumberList;
 }
 
 int main()
 {
-    int amountIntervals;
-    int bottomLimit, upperLimit;
-    scanf("%d", &amountIntervals);
+    long amountIntervals;
+    long bottomLimit, upperLimit;
+    scanf("%ld", &amountIntervals);
  
-    deque<int> primeList = returnPrimes((int)sqrt((double)MAX_NUMBER));
+    deque<long> primeList = returnPrimesEratosthenes((long)ceil(sqrt((double)MAX_NUMBER)));
 
-    for(int index=0; index < amountIntervals; index++)
+
+    for(long index=0; index < amountIntervals; index++)
     {
-        scanf("%d %d", &bottomLimit, &upperLimit);
-        if(bottomLimit == 2)
+        scanf("%ld %ld", &bottomLimit, &upperLimit);
+        deque<bool> primeCandidates(upperLimit - bottomLimit + 1, true);
+        long sqrtUpperLimit = (long)ceil(sqrt((double)upperLimit));
+        for(deque<long>::iterator it = primeList.begin(); *it <= sqrtUpperLimit; it++)
         {
-            printf("%d\n", bottomLimit);
-        }
-
-        int increment;
-        if(bottomLimit % 2 == 0)
-        {
-            increment = 1;
-        }
-        else
-        {
-            increment = 0;
-        }
-        for(int number=bottomLimit+increment; number <= upperLimit; number+=2)
-        {
-            int sqrtNumber = (int)sqrt((double)number);
-            bool isPrime = true;
-            for(deque<int>::iterator it = primeList.begin(); *it <= sqrtNumber; it++)
+            for(long droppedNumber = (long)ceil((double)bottomLimit / (*it)) * (*it); droppedNumber <= upperLimit; droppedNumber+=(*it))
             {
-                if(number % *it == 0)
+                if(droppedNumber != *it)
                 {
-                    isPrime = false;
-                    break;
+                    primeCandidates[droppedNumber-bottomLimit] = false;
                 }
             }
-            
-            if(isPrime)
+        }
+        
+        for(long index = 0; index < upperLimit - bottomLimit + 1; index++)
+        {
+            if(primeCandidates[index])
             {
-                printf("%d\n", number);
+                printf("%ld\n", bottomLimit + index);
             }
         }
     }
