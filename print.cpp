@@ -43,7 +43,6 @@ int main()
  
     deque<long> primeList = returnPrimesEratosthenes((long)ceil(sqrt((double)MAX_NUMBER)));
 
-
     for(long index=0; index < amountIntervals; index++)
     {
         scanf("%ld %ld", &bottomLimit, &upperLimit);
