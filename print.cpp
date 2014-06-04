@@ -8,7 +8,9 @@ using namespace std;
 
 deque<int> returnPrimesAtkin(int limitNumber)
 {
-    deque<int> isPrime(limitNumber-5, false);
+    deque<bool> isPrime(limitNumber, false);
+    isPrime[1] = true;
+    isPrime[2] = true;
 
     int sqrtLimitNumber = (int)sqrt((double)limitNumber);
     for(int x=1; x <= sqrtLimitNumber; x++)
@@ -18,47 +20,45 @@ deque<int> returnPrimesAtkin(int limitNumber)
             int n = 4*x*x + y*y;
             if( n <= limitNumber && (n % 12 == 1 || n % 12 == 5))
             {
-                isPrime[n-5] = !isPrime[n-5];
+                isPrime[n-1] = !isPrime[n-1];
             }
 
             n = 3*x*x + y*y;
             if( n <= limitNumber && n % 12 == 7)
             {
-                isPrime[n-5] = !isPrime[n-5];
+                isPrime[n-1] = !isPrime[n-1];
             }
 
             n = 3*x*x - y*y;
             if(x > y && n <= limitNumber && n % 12 == 11)
             {
-                isPrime[n-5] = !isPrime[n-5];
+                isPrime[n-1] = !isPrime[n-1];
             }
         }
     }
 
     for(int index=5; index <= sqrtLimitNumber; index++)
     {
-        if(isPrime[index-5])
+        if(isPrime[index-1])
         {
             for(int k = index*index; k <= limitNumber; k+=(index*index))
             {
-                isPrime[k-5] = false;
+                isPrime[k-1] = false;
             }
         }
     }
 
    deque<int> primeList;
-   primeList.push_back(2);
-   primeList.push_back(3);
 
-   for(int index=0; index < limitNumber-5; index++)
+   for(int index=0; index < limitNumber; index++)
    {
        if(isPrime[index])
        {
-           primeList.push_back(index+5);
+           primeList.push_back(index+1);
        }
    }
 
-   return isPrime;
+   return primeList;
 
 }
 
@@ -72,7 +72,7 @@ int main()
     for(int index=0; index < amountIntervals; index++)
     {
         scanf("%d %d", &bottomLimit, &upperLimit);
-        deque<int> primeList = returnPrimesAtkin((int)sqrt((double)upperLimit));
+        deque<int> primeList = returnPrimesAtkin(upperLimit);
         for(deque<int>::iterator it=primeList.begin(); it != primeList.end(); it++)
         {
             if(*it >= bottomLimit)
