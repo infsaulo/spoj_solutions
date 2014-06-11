@@ -2,7 +2,7 @@
 #include <deque>
 #include <cmath>
 
-#define MAX_NUMBER 2147483647
+#define MAX_NUMBER 1000000000
 
 using namespace std;
 
