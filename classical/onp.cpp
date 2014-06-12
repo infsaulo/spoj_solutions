@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <stack>
 #include <vector>
+#include <string> 
 
 using namespace std;
 
@@ -14,7 +15,6 @@ class HashTable
     vector<T*> *table;
 
     public:
-
     HashTable(int size);
     void insert(T *element);
     T* retrieve(char key);
@@ -28,7 +28,7 @@ class HashTable
 template <class T>
 HashTable<T>::HashTable(int size)
 {
-    table = new vector<T*>(size, NULL);
+    table = new vector<T*>(size, (T*)NULL);
     this->size = size;
     loadFactor = 0;
 }
@@ -62,18 +62,21 @@ void HashTable<T>::resize()
     size = newSize;
     setLoadFactor(0.0);
 
-    vector<T*> *resizedTable = new vector<T*>(size, NULL);
+    vector<T*> *resizedTable = new vector<T*>(size, (T*)NULL);
     for(typename vector<T*>::iterator it = table->begin(); it != table->end(); it++)
     {
-        int hashedPosition = hashFunction((*it)->getKey());
-        while((*resizedTable)[hashedPosition] != NULL)
+        if(*it)
         {
-            hashedPosition++;
-            hashedPosition %= size;
-        }
+            int hashedPosition = hashFunction((*it)->getKey());
+            while((*resizedTable)[hashedPosition] != NULL)
+            {
+                hashedPosition++;
+                hashedPosition %= size;
+            }
 
-        (*resizedTable)[hashedPosition] = *it;
-        setLoadFactor(getLoadFactor() + 1.0/size);
+            (*resizedTable)[hashedPosition] = *it;
+            setLoadFactor(getLoadFactor() + 1.0/size);
+        }
     }
 
     delete table;
@@ -171,49 +174,140 @@ class RPNConverter
 {
     char *expression;
     stack<char> operatorStack;
-    HashTable<Entry> *hashTable; 
+    HashTable<Entry> *priorityTable; 
+    string rpn;
 
     public:
     RPNConverter(char *expression);
-    vector<char> getRPN();
+    string getRPN();
+    ~RPNConverter();
 
     private:
     void pushOperator(char optor);
     char popOperator();
     bool isTopHigherPriority(char optor);
-    ~RPNConverter();
+    int typeChar(char ch);
 };
 
 RPNConverter::RPNConverter(char *expression)
 {
+    this->expression = expression;
+
+    // Initalize the table of priorities
+    priorityTable = new HashTable<Entry>(5); // 5 diferent operators
+    priorityTable->insert(new Entry('+', 1));
+    priorityTable->insert(new Entry('-', 2));
+    priorityTable->insert(new Entry('*', 3));
+    priorityTable->insert(new Entry('/', 4));
+    priorityTable->insert(new Entry('^', 5));
 }
 
-vector<char> RPNConverter::getRPN()
+int RPNConverter::typeChar(char ch)
 {
-	vector<char> rpn;
+    if(ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^')
+    {
+        // It's a operator
+        return 0;
+    }
+
+    if(ch == ')')
+    {
+        // It's a end of parenthesis
+        return 1;
+    }
+
+    if(ch == '(')
+    {
+        // It's a begin of parenthesis
+        return 2;
+    }
+
+    // It's a alphabetic character.
+    return 3;
+}
+
+string RPNConverter::getRPN()
+{
+    char *ptr = expression;
+    while(*ptr)
+    {
+        switch(typeChar(*ptr))
+        {
+            case 0: // operator
+            pushOperator(*ptr);
+            break;
+            case 1: // end of parenthesis
+            while( operatorStack.top() != '(')
+            {
+                rpn += popOperator();
+            }
+            popOperator();
+            break;
+            case 3: // alphabetic character
+            rpn += *ptr;
+            break;
+            default: // begin of parenthesis
+            operatorStack.push(*ptr);
+            break;
+        }
+        ptr++;
+    }
+
+    while(!operatorStack.empty())
+    {
+        char ch = popOperator();
+        if(ch != '(')
+        {
+            rpn += ch;
+        }
+    }
+
 	return rpn;
 }
 
 void RPNConverter::pushOperator(char optor)
 {
+    while(!operatorStack.empty() && operatorStack.top() != '(' && isTopHigherPriority(optor))
+    {
+        rpn += popOperator();
+    }
+
+    operatorStack.push(optor);
 }
 
 char RPNConverter::popOperator()
 {
-	return 'a';
+    char topOptor = operatorStack.top();
+    operatorStack.pop();
+	return topOptor;
 }
 
 bool RPNConverter::isTopHigherPriority(char optor)
 {
-    return false;
+    return priorityTable->retrieve(operatorStack.top())->getValue() > priorityTable->retrieve(optor)->getValue();
 }
 
 RPNConverter::~RPNConverter()
 {
-    delete expression;
+    delete priorityTable;
 }
 
 int main()
 {
+    int amountExpressions;
+    scanf("%d", &amountExpressions);
+
+    for(int index=0; index < amountExpressions; index++)
+    {
+        char *expression = new char[400];
+        scanf("%s", expression);
+        RPNConverter converter(expression);
+        
+        string rpn = converter.getRPN();
+        printf("%s\n", rpn.c_str());
+
+        delete expression;
+    }
+
     return 0;
 }
