@@ -5,31 +5,27 @@
 #define MAX_AMOUNT_DIGITES 1000001
 using namespace std;
 
-bool isLessThan(deque<char>& palindrome, char* originalNumber, int originalSize)
+bool isLessThan(deque<char>& palindrome, char* originalNumber, int indexPivot1, int originalSize)
 {
     if(originalSize < palindrome.size())
     {
         return false;
     }
 
-    for(int index = 0; index < originalSize; index++)
+    if(palindrome[indexPivot1] > originalNumber[indexPivot1] )
     {
-        if(palindrome[index] > originalNumber[index])
-        {
-            return false;
-        }
-        if(palindrome[index] < originalNumber[index])
-        {
-            return true;
-        }
+        return false;
     }
-
+    
     return true;
 }
 
-void makeHalfPalindrome(deque<char>& palindrome, int indexPivot1, int indexPivot2)
+bool makeHalfPalindrome(deque<char>& palindrome, int indexPivot1, int indexPivot2)
 {
+    bool lessEqualThan = true;
+    bool alreadyDecided = false;
     int increment = 0;
+
     if(indexPivot1 == indexPivot2)
     {
         increment++;
@@ -37,8 +33,19 @@ void makeHalfPalindrome(deque<char>& palindrome, int indexPivot1, int indexPivot
 
     for(int index1 = indexPivot1 - increment, index2 = indexPivot2 + increment; index1 >= 0; index1--, index2++)
     {
+        if(palindrome[index1] > palindrome[index2] && !alreadyDecided)
+        {
+            lessEqualThan = false;
+            alreadyDecided = true;
+        }
+        if(palindrome[index1] < palindrome[index2] && !alreadyDecided)
+        {
+            alreadyDecided = true;
+        }
         palindrome[index2] = palindrome[index1];
     }
+
+    return lessEqualThan;
 }
 
 void nextPalindrome(deque<char>& palindrome, char* originalNumber, int originalSize)
@@ -58,49 +65,73 @@ void nextPalindrome(deque<char>& palindrome, char* originalNumber, int originalS
         indexPivot2 = indexPivot1;
     }
 
-    makeHalfPalindrome(palindrome, indexPivot1, indexPivot2);
-
-    if(isLessThan(palindrome, originalNumber, originalSize))
-    {
+        bool firstLoop = true;
+        bool isLessEqual = true;
         do
         {
-            if(indexPivot1 == indexPivot2)
+            if(firstLoop)
             {
-                if(palindrome[indexPivot1] == '9')
+                firstLoop = false;
+                isLessEqual = makeHalfPalindrome(palindrome, indexPivot1, indexPivot2);
+            }
+            if(isLessEqual)
+            {
+                if(indexPivot1 == indexPivot2)
                 {
-                    palindrome[indexPivot1] = '0';
-                    indexPivot1--;
-                    indexPivot2++;
+                    if(palindrome[indexPivot1] == '9')
+                    {
+                        palindrome[indexPivot1] = '0';
+                        if(!isLessThan(palindrome, originalNumber, indexPivot1, originalSize) )
+                        {
+                            break;
+                        }
+                        indexPivot1--;
+                        indexPivot2++;
+                    }
+                    else
+                    {
+                        palindrome[indexPivot1] += 1;
+                        if(!isLessThan(palindrome, originalNumber, indexPivot1, originalSize) )
+                        {
+                            break;
+                        }
+                    }
                 }
                 else
                 {
-                    palindrome[indexPivot1] += 1;
+                    if(palindrome[indexPivot1] == '9')
+                    {
+                        palindrome[indexPivot1] = '0';
+                        palindrome[indexPivot2] = '0';
+                        if(!isLessThan(palindrome, originalNumber, indexPivot1, originalSize) )
+                        {
+                            break;
+                        }
+                        indexPivot1--;
+                        indexPivot2++;
+                    }
+                    else
+                    {
+                        palindrome[indexPivot1] += 1;
+                        palindrome[indexPivot2] += 1;
+                        if(!isLessThan(palindrome, originalNumber, indexPivot1, originalSize) )
+                        {
+                            break;
+                        }
+                    }
                 }
-
             }
             else
             {
-                if(palindrome[indexPivot1] == '9')
-                {
-                    palindrome[indexPivot1] = '0';
-                    palindrome[indexPivot2] = '0';
-                    indexPivot1--;
-                    indexPivot2++;
-                }
-                else
-                {
-                    palindrome[indexPivot1] += 1;
-                    palindrome[indexPivot2] += 1;
-                }
+                break;
             }
-        }while(isLessThan(palindrome, originalNumber, originalSize) && indexPivot1 >= 0);
+        }while(indexPivot1 >= 0);
 
         if(indexPivot1 < 0)
         {
             palindrome.push_front('1');
             nextPalindrome(palindrome, originalNumber, originalSize);
         }
-    }
 }
 
 int main()
